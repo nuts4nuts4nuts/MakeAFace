@@ -12,7 +12,20 @@ link_directories(${CMAKE_SOURCE_DIR}/thirdparty/opencv/lib)
 
 set(SOURCE source)
 
-add_executable(MakeAFace ${SOURCE}/main.cpp ${SOURCE}/GLShader.cpp ${SOURCE}/GLShader.h)
+add_executable(MakeAFace ${SOURCE}/main.cpp
+						 ${SOURCE}/GLShader.cpp
+						 ${SOURCE}/GLShader.h
+						 ${SOURCE}/imconfig.h
+						 ${SOURCE}/imgui.cpp
+						 ${SOURCE}/imgui.h
+						 ${SOURCE}/imgui_demo.cpp
+						 ${SOURCE}/imgui_draw.cpp
+						 ${SOURCE}/imgui_internal.h
+						 ${SOURCE}/imgui_impl_glfw_gl3.h
+						 ${SOURCE}/imgui_impl_glfw_gl3.cpp
+						 ${SOURCE}/stb_rect_pack.h
+						 ${SOURCE}/stb_textedit.h
+						 ${SOURCE}/stb_truetype.h)
 
 set(LIBS
 	glfw3

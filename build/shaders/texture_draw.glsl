@@ -10,8 +10,8 @@ void main()
 	vec2 fragCoord = gl_FragCoord.xy;
 	vec2 uv = fragCoord.xy / iResolution.xy;
 	
-    //Flip the u so that the final image is mirrored
-    uv = vec2(1.0 - uv.x, uv.y);
+    //Flip so the image is mirrored correctly
+    uv = vec2(1.0 - uv.x, 1.0 - uv.y);
     
 	fragColor = texture( renderedTexture, uv );
 }

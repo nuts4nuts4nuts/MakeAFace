@@ -7,9 +7,42 @@
     <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\GLShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_impl_glfw_gl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\GLShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_impl_glfw_gl3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_rect_pack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

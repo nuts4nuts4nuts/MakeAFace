@@ -315,8 +315,19 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\GLShader.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imconfig.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_internal.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_impl_glfw_gl3.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_rect_pack.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_textedit.h" />
+    <ClInclude Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\stb_truetype.h" />
     <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\main.cpp"  />
     <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\GLShader.cpp"  />
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui.cpp"  />
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_demo.cpp"  />
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_draw.cpp"  />
+    <ClCompile Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\source\imgui_impl_glfw_gl3.cpp"  />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="D:\Documents\_VIRTUALBOX_SHARED\MakeAFace_OpenGL\build\ZERO_CHECK.vcxproj">

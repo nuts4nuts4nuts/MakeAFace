@@ -5,11 +5,11 @@ uniform sampler2D previousTexture;
 uniform vec2 iResolution;
 uniform float iTime;
 
-out vec4 fragColor;
+uniform bool useTriangles;
+uniform bool everyPixelSameColor;
+uniform bool sourceColors;
 
-//#define SOURCE_COLORS
-#define EVERY_PIXEL_SAME_COLOR
-#define TRIANGLES
+out vec4 fragColor;
 
 //Randomness code from Martin, here: https://www.shadertoy.com/view/XlfGDS
 float Random_Final(vec2 uv, float seed)
@@ -36,9 +36,10 @@ void main()
     vec2 imageUV  = fragCoord.xy / iResolution.xy;
     vec2 testUV = imageUV;
 
-#ifdef EVERY_PIXEL_SAME_COLOR
-    testUV = vec2(1.0, 1.0);   
-#endif
+	if(everyPixelSameColor)
+	{
+	    testUV = vec2(1.0, 1.0); 
+	}
 
     vec2 triPoint1 = vec2(Random_Final(testUV, iTime), Random_Final(testUV, iTime * 2.0));
     vec2 triPoint2 = vec2(Random_Final(testUV, iTime * 3.0), Random_Final(testUV, iTime * 4.0));
@@ -49,12 +50,13 @@ void main()
                           Random_Final(testUV, iTime * 12.0),
                           1.0);
 
-#ifdef SOURCE_COLORS
-    vec2 colorUV = vec2(Random_Final(testUV, iTime * 10.0),
-                        Random_Final(testUV, iTime * 11.0));
+	if(sourceColors)
+	{
+		vec2 colorUV = vec2(Random_Final(testUV, iTime * 10.0),
+							Random_Final(testUV, iTime * 11.0));
 
-    testColor = texture( trueTexture, colorUV );
-#endif
+		testColor = texture( trueTexture, colorUV );
+	}
     
     vec4 trueColor = texture( trueTexture, imageUV );
     vec4 prevColor = texture( previousTexture, imageUV );
@@ -63,9 +65,10 @@ void main()
 
     bool isInTriangle = true;
 
-#ifdef TRIANGLES
-    isInTriangle = pointInTriangle(triPoint1, triPoint2, triPoint3, imageUV); 
-#endif
+	if(useTriangles)
+	{
+		isInTriangle = pointInTriangle(triPoint1, triPoint2, triPoint3, imageUV);
+	}
 
     if(isInTriangle && abs(length(trueColor - testColor)) < abs(length(trueColor - prevColor)))
     {
