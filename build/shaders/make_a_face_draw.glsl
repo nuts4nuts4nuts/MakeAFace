@@ -1,9 +1,7 @@
-// Atomic counters require 4.2 or higher according to
-// https://www.opengl.org/wiki/Atomic_Counter
-
 #version 440
 #extension GL_EXT_gpu_shader4 : enable
 
+uniform sampler2D referenceTexture;
 uniform sampler2D trueTexture;
 uniform vec2 iResolution;
 uniform float iTime;
@@ -11,6 +9,11 @@ uniform float iTime;
 uniform bool useTriangles;
 uniform bool everyPixelSameColor;
 uniform bool sourceColors;
+
+uniform bool allNew;
+//Atomic counter
+layout(binding = 0) uniform atomic_uint newCount;
+layout(binding = 0) uniform atomic_uint totalCount;
 
 out vec4 fragColor;
 
@@ -63,8 +66,23 @@ void main()
 
     bool isInTriangle = pointInTriangle(triPoint1, triPoint2, triPoint3, imageUV);
 
-    if(!useTriangles || isInTriangle)
+	vec4 trueColor = texture( trueTexture, imageUV );
+	fragColor = texture( referenceTexture, imageUV );
+	
+    if((!useTriangles || isInTriangle))
     {
-        fragColor = testColor;
+		atomicCounterIncrement(totalCount);
+		
+		bool rightColor = abs(length(trueColor - testColor)) < abs(length(trueColor - fragColor));
+				
+		if(allNew && rightColor)
+		{
+			atomicCounterIncrement(newCount);
+		}
+		
+		if(allNew || rightColor)
+		{
+			fragColor = testColor;
+		}
     }
 }
