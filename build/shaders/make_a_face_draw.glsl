@@ -11,6 +11,8 @@ uniform bool everyPixelSameColor;
 uniform bool sourceColors;
 
 uniform bool allNew;
+uniform bool transparency;
+
 //Atomic counter
 layout(binding = 0) uniform atomic_uint newCount;
 layout(binding = 0) uniform atomic_uint totalCount;
@@ -55,7 +57,7 @@ void main()
                           Random_Final(testUV, iTime * 11.0),
                           Random_Final(testUV, iTime * 12.0),
                           1.0);
-
+						 
 	if(sourceColors)
 	{
 		vec2 colorUV = vec2(Random_Final(testUV, iTime * 10.0),
@@ -68,6 +70,13 @@ void main()
 
 	vec4 trueColor = texture( trueTexture, imageUV );
 	fragColor = texture( referenceTexture, imageUV );
+
+	if(transparency)
+	{
+		float randomAlpha = Random_Final(testUV, iTime * 13.0);
+		
+		testColor = testColor * randomAlpha + fragColor * (1.0 - randomAlpha);
+	}
 	
     if((!useTriangles || isInTriangle))
     {

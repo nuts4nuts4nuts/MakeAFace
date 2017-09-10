@@ -89,6 +89,11 @@ int main(void)
 
 	ImGui_ImplGlfwGL3_Init(window, true);
 
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glClearColor(1, 1, 1, 0);
+
 	// Load the shader
 	GLuint textureCopyShader = 0;
 	{
@@ -257,13 +262,15 @@ int main(void)
 	std::thread captureThread(captureFrames);
 
 	//draw loop
-	double frameRateMarker = glfwGetTime();
+	double frameRateMarkerDraw = glfwGetTime();
+	double frameRateMarkerUI = glfwGetTime();
 
 	//ImGui variables
 	int targetFrameRate = 500;
 	bool useTriangles = true;
 	bool everyPixelSameColor = true;
 	bool sourceColors = false;
+	bool transparency = false;
 	bool allNew = false;
 
 	glfwSetKeyCallback(window, keyCallback);
@@ -271,14 +278,15 @@ int main(void)
 	while (!glfwWindowShouldClose(window))
 	{
 		double currentTime = glfwGetTime();
-		if (currentTime - frameRateMarker >= (1.0 / (double)targetFrameRate))
-		{
-			frameRateMarker = currentTime;
 
-			glfwPollEvents();
+		glfwPollEvents();
+
+		if (currentTime - frameRateMarkerUI >= (1.0 / std::fmax((double)targetFrameRate, 60.0)))
+		{
+			frameRateMarkerUI = currentTime;
 
 			//ImGui stuff
-			if(showImGuiWindow)
+			if (showImGuiWindow)
 			{
 				ImGui_ImplGlfwGL3_NewFrame();
 
@@ -287,8 +295,9 @@ int main(void)
 				ImGui::Checkbox("Triangles", &useTriangles);
 				ImGui::Checkbox("Same Color", &everyPixelSameColor);
 				ImGui::Checkbox("Source Color", &sourceColors);
+				ImGui::Checkbox("Transparency", &transparency);
 				ImGui::Checkbox("All New", &allNew);
-				ImGui::SliderInt("Target FPS", &targetFrameRate, 15, 1500);
+				ImGui::SliderInt("Target FPS", &targetFrameRate, 1, 1500);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 				if (ImGui::SmallButton("Reset"))
@@ -300,135 +309,142 @@ int main(void)
 				ImGui::End();
 			}
 
-			//Copy camera to a texture
+			if (currentTime - frameRateMarkerDraw >= (1.0 / (double)targetFrameRate))
 			{
-				glBindTexture(GL_TEXTURE_2D, cameraTexture);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, captureFrame.size().width, captureFrame.size().height, 0, GL_BGR, GL_UNSIGNED_BYTE, captureFrame.ptr());
-			}
+				frameRateMarkerDraw = currentTime;
 
-			//Draw test shape
-			{
-				//Reset atomic counters
-				glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, atomicCounterBuffer);
-				GLuint a[2] = { 0, 0 };
-				glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, a);
-				glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
-				glBindFramebuffer(GL_FRAMEBUFFER, currentFramebuffer);
-				glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, atomicCounterBuffer);
-
-				glClear(GL_COLOR_BUFFER_BIT);
-
-				//Static uniforms
-				int uniformWindowSize = glGetUniformLocation(makeAFaceDraw, "iResolution");
-				int uniformTime = glGetUniformLocation(makeAFaceDraw, "iTime");
-				int trueTexture = glGetUniformLocation(makeAFaceDraw, "trueTexture");
-				int referenceTexture = glGetUniformLocation(makeAFaceDraw, "referenceTexture");
-
-				//Settings
-				int triangleSetting = glGetUniformLocation(makeAFaceDraw, "useTriangles");
-				int pixelColorSetting = glGetUniformLocation(makeAFaceDraw, "everyPixelSameColor");
-				int sourceColorSetting = glGetUniformLocation(makeAFaceDraw, "sourceColors");
-				int allNewSetting = glGetUniformLocation(makeAFaceDraw, "allNew");
-
-				glUseProgram(makeAFaceDraw);
-				glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
-				glUniform1f(uniformTime, ((float)currentTime));
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, cameraTexture);
-				glUniform1i(trueTexture, 0);
-
-				glActiveTexture(GL_TEXTURE0 + 1);
-				glBindTexture(GL_TEXTURE_2D, referenceFBTexture);
-				glUniform1i(referenceTexture, 1);
-
-				glUniform1i(triangleSetting, useTriangles);
-				glUniform1i(pixelColorSetting, everyPixelSameColor);
-				glUniform1i(sourceColorSetting, sourceColors);
-				glUniform1i(allNewSetting, allNew);
-
-				drawQuad();
-			}
-
-			//Copy final image
-			{
-				//Get atomic counter data
-				GLuint atomicCounterValues[2];
-				glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, atomicCounterBuffer);
-				glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, atomicCounterValues);
-				glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-
-				glBindFramebuffer(GL_FRAMEBUFFER, finalFramebuffer);
-
-				glClear(GL_COLOR_BUFFER_BIT);
-
-				glUseProgram(textureCopyShader);
-
-				int uniformWindowSize = glGetUniformLocation(textureCopyShader, "iResolution");
-				glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-				int renderedTexture = glGetUniformLocation(textureCopyShader, "renderedTexture");
-				glActiveTexture(GL_TEXTURE0 + 2);
-
-				if (!allNew || atomicCounterValues[0] * 1.2 > atomicCounterValues[1])
+				//Copy camera to a texture
 				{
-					glBindTexture(GL_TEXTURE_2D, currentFBTexture);
+					glBindTexture(GL_TEXTURE_2D, cameraTexture);
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, captureFrame.size().width, captureFrame.size().height, 0, GL_BGR, GL_UNSIGNED_BYTE, captureFrame.ptr());
 				}
-				else
+
+				//Draw test shape
 				{
+					//Reset atomic counters
+					glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, atomicCounterBuffer);
+					GLuint a[2] = { 0, 0 };
+					glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, a);
+					glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
+					glBindFramebuffer(GL_FRAMEBUFFER, currentFramebuffer);
+					glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, atomicCounterBuffer);
+
+					glClear(GL_COLOR_BUFFER_BIT);
+
+					//Static uniforms
+					int uniformWindowSize = glGetUniformLocation(makeAFaceDraw, "iResolution");
+					int uniformTime = glGetUniformLocation(makeAFaceDraw, "iTime");
+					int trueTexture = glGetUniformLocation(makeAFaceDraw, "trueTexture");
+					int referenceTexture = glGetUniformLocation(makeAFaceDraw, "referenceTexture");
+
+					//Settings
+					int triangleSetting = glGetUniformLocation(makeAFaceDraw, "useTriangles");
+					int pixelColorSetting = glGetUniformLocation(makeAFaceDraw, "everyPixelSameColor");
+					int sourceColorSetting = glGetUniformLocation(makeAFaceDraw, "sourceColors");
+					int transparencySetting = glGetUniformLocation(makeAFaceDraw, "transparency");
+					int allNewSetting = glGetUniformLocation(makeAFaceDraw, "allNew");
+
+					glUseProgram(makeAFaceDraw);
+					glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
+					glUniform1f(uniformTime, ((float)currentTime));
+
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, cameraTexture);
+					glUniform1i(trueTexture, 0);
+
+					glActiveTexture(GL_TEXTURE0 + 1);
 					glBindTexture(GL_TEXTURE_2D, referenceFBTexture);
+					glUniform1i(referenceTexture, 1);
+
+					glUniform1i(triangleSetting, useTriangles);
+					glUniform1i(pixelColorSetting, everyPixelSameColor);
+					glUniform1i(sourceColorSetting, sourceColors);
+					glUniform1i(transparencySetting, transparency);
+					glUniform1i(allNewSetting, allNew);
+
+					drawQuad();
 				}
 
-				glUniform1i(renderedTexture, 2);
+				//Copy final image
+				{
+					//Get atomic counter data
+					GLuint atomicCounterValues[2];
+					glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, atomicCounterBuffer);
+					glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint) * 2, atomicCounterValues);
+					glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
-				drawQuad();
+					glBindFramebuffer(GL_FRAMEBUFFER, finalFramebuffer);
+
+					glClear(GL_COLOR_BUFFER_BIT);
+
+					glUseProgram(textureCopyShader);
+
+					int uniformWindowSize = glGetUniformLocation(textureCopyShader, "iResolution");
+					glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+					int renderedTexture = glGetUniformLocation(textureCopyShader, "renderedTexture");
+					glActiveTexture(GL_TEXTURE0 + 2);
+
+					if (!allNew || atomicCounterValues[0] * 1.8 > atomicCounterValues[1])
+					{
+						glBindTexture(GL_TEXTURE_2D, currentFBTexture);
+					}
+					else
+					{
+						glBindTexture(GL_TEXTURE_2D, referenceFBTexture);
+					}
+
+					glUniform1i(renderedTexture, 2);
+
+					drawQuad();
+				}
+
+				//Copy final image
+				{
+					glBindFramebuffer(GL_FRAMEBUFFER, referenceFramebuffer);
+
+					glClear(GL_COLOR_BUFFER_BIT);
+
+					glUseProgram(textureCopyShader);
+
+					int uniformWindowSize = glGetUniformLocation(textureCopyShader, "iResolution");
+					glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+					int renderedTexture = glGetUniformLocation(textureCopyShader, "renderedTexture");
+					glActiveTexture(GL_TEXTURE0 + 2);
+					glBindTexture(GL_TEXTURE_2D, finalFBTexture);
+					glUniform1i(renderedTexture, 2);
+
+					drawQuad();
+				}
+
+				//Draw final image
+				{
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+					glClear(GL_COLOR_BUFFER_BIT);
+
+					glUseProgram(textureDrawShader);
+
+					int uniformWindowSize = glGetUniformLocation(textureDrawShader, "iResolution");
+					glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+					int renderedTexture = glGetUniformLocation(textureDrawShader, "renderedTexture");
+					glActiveTexture(GL_TEXTURE0 + 2);
+					glBindTexture(GL_TEXTURE_2D, finalFBTexture);
+					glUniform1i(renderedTexture, 2);
+
+					drawQuad();
+				}
+
+				if (showImGuiWindow)
+				{
+					ImGui::Render();
+				}
+
+				glfwSwapBuffers(window);
 			}
-
-			//Copy final image
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, referenceFramebuffer);
-
-				glClear(GL_COLOR_BUFFER_BIT);
-
-				glUseProgram(textureCopyShader);
-
-				int uniformWindowSize = glGetUniformLocation(textureCopyShader, "iResolution");
-				glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-				int renderedTexture = glGetUniformLocation(textureCopyShader, "renderedTexture");
-				glActiveTexture(GL_TEXTURE0 + 2);
-				glBindTexture(GL_TEXTURE_2D, finalFBTexture);
-				glUniform1i(renderedTexture, 2);
-
-				drawQuad();
-			}
-
-			//Draw final image
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-				glClear(GL_COLOR_BUFFER_BIT);
-
-				glUseProgram(textureDrawShader);
-
-				int uniformWindowSize = glGetUniformLocation(textureDrawShader, "iResolution");
-				glUniform2f(uniformWindowSize, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-				int renderedTexture = glGetUniformLocation(textureDrawShader, "renderedTexture");
-				glActiveTexture(GL_TEXTURE0 + 2);
-				glBindTexture(GL_TEXTURE_2D, finalFBTexture);
-				glUniform1i(renderedTexture, 2);
-
-				drawQuad();
-			}
-
-			if (showImGuiWindow)
-			{
-				ImGui::Render();
-			}
-
-			glfwSwapBuffers(window);
 		}
 	}
 
