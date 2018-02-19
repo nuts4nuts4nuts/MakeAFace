@@ -8,8 +8,8 @@ GLShader files brought in from http://www.nexcius.net/2012/11/20/how-to-load-a-g
 #define GLEW_STATIC
 #include "glew.h"
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
 
 
 GLuint LoadShader(const char *vertex_path, const char *fragment_path);
