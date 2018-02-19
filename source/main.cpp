@@ -50,14 +50,6 @@ void drawQuad()
 	glEnd();
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_A  && action == GLFW_PRESS)
-	{
-		showImGuiWindow = !showImGuiWindow;
-	}
-}
-
 int main(void)
 {
 	GLFWwindow* window;
@@ -92,61 +84,16 @@ int main(void)
 	// Load the shader
 	GLuint textureCopyShader = 0;
 	{
-		//GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		//glShaderSource(vertexShader, 1, /*SHADER*/, nullptr);
-		//glCompileShader(vertexShader);
-
-		//GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-		//glShaderSource(fragShader, 1, /*SHAcameraTextureDER*/, nullptr);
-		//glCompileShader(fragShader);
-
-		//GLuint shaderProgram = glCreateProgram();
-		//glAttachShader(shaderProgram, fragShader);
-		//glAttachShader(shaderProgram, vertexShader);
-		//glLinkProgram(shaderProgram);
-
-		//shaderProgram = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\make_a_face_fs.glsl");
 		textureCopyShader = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\texture_copy.glsl");
 	}
-
 	// Load the shader
 	GLuint makeAFaceMainShader = 0;
 	{
-		//GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		//glShaderSource(vertexShader, 1, /*SHADER*/, nullptr);
-		//glCompileShader(vertexShader);
-
-		//GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-		//glShaderSource(fragShader, 1, /*SHADER*/, nullptr);
-		//glCompileShader(fragShader);
-
-		//GLuint shaderProgram = glCreateProgram();
-		//glAttachShader(shaderProgram, fragShader);
-		//glAttachShader(shaderProgram, vertexShader);
-		//glLinkProgram(shaderProgram);
-
-		//shaderProgram = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\make_a_face_fs.glsl");
 		makeAFaceMainShader = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\make_a_face_main.glsl");
 	}
-
-
 	// Load the shader
 	GLuint textureDrawShader = 0;
 	{
-		//GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		//glShaderSource(vertexShader, 1, /*SHADER*/, nullptr);
-		//glCompileShader(vertexShader);
-
-		//GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-		//glShaderSource(fragShader, 1, /*SHADER*/, nullptr);
-		//glCompileShader(fragShader);
-
-		//GLuint shaderProgram = glCreateProgram();
-		//glAttachShader(shaderPro!gram, fragShader);
-		//glAttachShader(shaderProgram, vertexShader);
-		//glLinkProgram(shaderProgram);
-
-		//shaderProgram = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\make_a_face_fs.glsl");
 		textureDrawShader = LoadShader("shaders\\make_a_face_vs.glsl", "shaders\\texture_draw.glsl");
 	}
 
@@ -230,8 +177,8 @@ int main(void)
 	bool useTriangles = true;
 	bool everyPixelSameColor = true;
 	bool sourceColors = false;
+	char picName[256] = "SavedImage.jpg";
 
-	glfwSetKeyCallback(window, keyCallback);
 	while (!glfwWindowShouldClose(window))
 	{
 		double currentTime = glfwGetTime();
@@ -241,18 +188,43 @@ int main(void)
 
 			glfwPollEvents();
 
+			ImGuiIO io = ImGui::GetIO();
+			if (io.KeyAlt)
+			{
+				if (ImGui::IsKeyPressed(65))
+				{
+					showImGuiWindow = !showImGuiWindow;
+				}
+			}
+
 			//ImGui stuff
 			if(showImGuiWindow)
 			{
 				ImGui_ImplGlfwGL3_NewFrame();
 
 				ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_FirstUseEver);
-				ImGui::Begin("Settings - Press A to toggle");
+				ImGui::Begin("Settings - Press Ctril + A to toggle");
 				ImGui::Checkbox("Triangles", &useTriangles);
 				ImGui::Checkbox("Same Color", &everyPixelSameColor);
 				ImGui::Checkbox("Source Color", &sourceColors);
-				ImGui::SliderInt("Target FPS", &targetFrameRate, 15, 1500);
+				ImGui::SliderInt("Target FPS", &targetFrameRate, 5, 1500);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+				ImGui::Text("----------------------");
+
+				ImGui::InputText("Pic name", picName, 256);
+				if (ImGui::SmallButton("Snap"))
+				{
+					cv::Mat saveImage(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);
+					glReadPixels(0, 0, saveImage.cols, saveImage.rows, GL_BGR, GL_UNSIGNED_BYTE, saveImage.data);
+					cv::flip(saveImage, saveImage, 0);
+					cv::imshow(picName, saveImage);
+					cv::imwrite(picName, saveImage);
+				}
+
+				if (ImGui::SmallButton("Shoot"))
+				{
+				}
 
 				if (ImGui::SmallButton("Reset"))
 				{
@@ -260,6 +232,7 @@ int main(void)
 					glClear(GL_COLOR_BUFFER_BIT);
 				}
 
+				ImGui::ShowTestWindow();
 				ImGui::End();
 			}
 
